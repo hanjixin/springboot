@@ -1,0 +1,10 @@
+person:
+  lastName: 两
+  age: 10
+  boss: true
+  birth: 2020/10/10
+  maps: { a: a, b: b }
+  list: [1, 2, 3]
+  dog:
+    color: red
+    name: dog
