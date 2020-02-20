@@ -17,4 +17,9 @@ class ControllerTempalte {
     public String  say (){
         return "login";
     }
+    @ResponseBody
+    @RequestMapping("/hello2")
+    public String hello2() {
+        return "213213";
+    }
 }

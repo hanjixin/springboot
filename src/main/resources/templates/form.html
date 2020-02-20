@@ -1,0 +1,218 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>demo</title>
+
+    <script type="text/javascript"
+        src="https://webapi.amap.com/maps?v=1.4.15&key=4ae060e42b6276b19dde5edf504be009&plugin=AMap.Geocoder,AMap.DistrictLayer,Map3D,AMap.Scale,AMap.ToolBar"></script>
+    <script type="text/javascript"
+        src="https://webapi.amap.com/loca?key=4ae060e42b6276b19dde5edf504be009&v=1.3.0"></script>
+    <script type="text/javascript" src="https://a.amap.com/jsapi_demos/static/demo-center/data/china-pp.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <!-- 高德 -->
+
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    #map {
+        height: 100vh;
+        width: 100vh;
+    }
+</style>
+
+<body>
+    我是form
+</body>
+
+<script src="https://a.amap.com/Loca/static/mock/adcodes.js"></script>
+<script>
+    // $https://restapi.amap.com/v3/config/district?key=9233f4ed89967bf3473be80bf0d16096&keywords=510100&subdistrict=3&offset=100
+    // const map = new AMap.Map('map');
+    var LabelsData = [];
+    $.get('https://restapi.amap.com/v3/config/district?key=9233f4ed89967bf3473be80bf0d16096&keywords=510100&subdistrict=3&offset=100').then(res => {
+        console.log(res, '行政编码')
+        var LabelsData = [];
+
+        for (let i = 0; i < res.districts.length; i++) {
+            let config = {
+                name: '',
+                position: [116.12, 39.11],
+                zooms: [5, 13],
+                zIndex: 1,
+                opacity: 1,
+                text: {
+                    content: '',
+                    direction: 'center',
+                    offset: [0, 0],
+                    zooms: [3, 20],
+                    style: {
+                        fontSize: 10,
+                        fontWeight: 'normal',
+                        fillColor: '#eee',
+                        strokeColor: '#88f',
+                        strokeWidth: 2,
+                    }
+                }
+            };
+            let district = districts[i];
+            let name = district.name;
+            config.text.content = name;
+            config.position = district.center.split(',');
+            LabelsData.push(config);
+        }
+    })
+    var SOC = 'CHN'
+    var colors = {};
+    var GDPSpeed = {
+        '520000': 10,//贵州
+        '540000': 10,//西藏
+        '530000': 8.5,//云南 
+        '500000': 8.5,//重庆
+        '360000': 8.5,//江西
+        '340000': 8.0,//安徽
+        '510000': 7.5,//四川
+        '350000': 8.5,//福建
+        '430000': 8.0,//湖南
+        '420000': 7.5, //湖北
+        '410000': 7.5,//河南
+        '330000': 7.0,//浙江
+        '640000': 7.5,//宁夏
+        '650000': 7.0,//新疆
+        '440000': 7.0,//广东
+        '370000': 7.0,//山东
+        '450000': 7.3,//广西
+        '630000': 7.0,//青海
+        '320000': 7.0,//江苏
+        '140000': 6.5,//山西
+        '460000': 7,// 海南
+        '310000': 6.5,//上海
+        '110000': 6.5, // 北京
+        '130000': 6.5, // 河北
+        '230000': 6, // 黑龙江
+        '220000': 6,// 吉林
+        '210000': 6.5, //辽宁
+        '150000': 6.5,//内蒙古
+        '120000': 5,// 天津
+        '620000': 6,// 甘肃
+        '610000': 8.5,// 甘肃
+        '710000': 2.64, //台湾
+        '810000': 3.0, //香港
+        '820000': 4.7 //澳门
+
+    }
+    var getColorByDGP = function (adcode) {
+        if (!colors[adcode]) {
+            var gdp = GDPSpeed[adcode];
+            if (!gdp) {
+                colors[adcode] = 'rgb(227,227,227)'
+            } else {
+                var r = 3;
+                var g = 140;
+                var b = 230;
+                var a = gdp / 10;
+                colors[adcode] = 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+            }
+        }
+        return colors[adcode]
+    }
+
+    var disCountry = new AMap.DistrictLayer.Province({
+        zIndex: 10,
+        SOC: 'CHN',
+        depth: 2,
+        adcode: ['510100'],
+        styles: {
+            'nation-stroke': '#ff6600',
+            'coastline-stroke': 'ff8800',
+            'province-stroke': 'white',
+            'fill': function (props) {
+                return getColorByDGP(props.adcode_pro)
+            }
+        }
+    })
+    disCountry.on('click', function (e) {
+        console.log(e)
+    })
+    var map = new AMap.Map("map", {
+        zooms: [1, 20],
+        center: [104.065735, 30.719192],
+        zoom: 10,
+        isHotspot: false,
+        defaultCursor: 'pointer',
+        layers: [
+            disCountry
+        ],
+        eventSupport: function (event) {
+            console.log(event)
+        },
+        viewMode: '2D',
+        resizeEnable: true
+    })
+    map.addControl(new AMap.Scale());
+    map.addControl(new AMap.ToolBar({ liteStyle: true }));
+    map.on('complete', function () {
+        var LabelsData = [];
+        $.get('https://restapi.amap.com/v3/config/district?key=9233f4ed89967bf3473be80bf0d16096&keywords=510100&subdistrict=3&offset=100').then(res => {
+            console.log(res, '行政编码')
+
+            function mapDir(districts) {
+                for (let i = 0; i < districts.length; i++) {
+                    let config = {
+                        name: '',
+                        position: [116.12, 39.11],
+                        zooms: [5, 13],
+                        zIndex: 1,
+                        opacity: 1,
+                        text: {
+                            content: '',
+                            direction: 'center',
+                            offset: [0, 0],
+                            zooms: [3, 20],
+                            style: {
+                                fontSize: 10,
+                                fontWeight: 'normal',
+                                fillColor: '#eee',
+                                strokeColor: '#88f',
+                                strokeWidth: 2,
+                            }
+                        }
+                    };
+                    let district = districts[i];
+                    let name = district.name;
+                    config.name = name;
+                    config.text.content = name;
+                    config.position = district.center.split(',');
+                    LabelsData.push(config);
+                    if(district.districts && district.districts.length) {
+                        mapDir(district.districts)
+                    }
+
+                }
+            }
+            mapDir(res.districts)
+            console.log(LabelsData)
+            var layer = new AMap.LabelsLayer({
+                // 开启标注避让，默认为开启，v1.4.15 新增属性
+                collision: false,
+                // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
+                animation: true,
+            });
+            for (var i = 0; i < LabelsData.length; i++) {
+                // console.log(LabelsData[i], 'LabelsData[i]')
+                var labelsMarker = new AMap.LabelMarker(LabelsData[i]);
+                layer.add(labelsMarker);
+            }
+            map.add(layer);
+        });
+
+    })
+
+</script>
+
+</html>
